@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .cell {
+            border: 1px solid #fff;
+            width: 100px;
+            height: 100px;
+            display: inline-block;
+            line-height: 100px;
+            text-align: center;
+            vertical-align: middle;
+            background-color: rgba(0, 0, 0, 0.3);
+            font-size: 28px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        const root = document.getElementById('root');
+        const ME = 1;
+        const OTHER = 2;
+        let color = 2;
+        let board = [
+            0, 0, 0,
+            0, 1, 0,
+            0, 0, 0,
+        ];
+
+        draw(board);
+        
+        function draw(board) {
+            root.innerHTML = '';
+            for(let i = 0; i < board.length; i++) {
+                const cell = document.createElement('div');
+                const br = document.createElement('br')
+                root.appendChild(cell);
+                cell.classList.add('cell');
+                cell.innerText = 
+                    board[i] === ME ? '⭕️' : 
+                    board[i] === OTHER ? '❌' : '';
+                if ((i + 1) % 3 === 0) {
+                    root.appendChild(br);
+                }
+                cell.addEventListener('click', () => move(i));
+            }
+        }
+
+        function move(index) {
+            board[index] = color;
+            draw(board);
+            if (check(board, color)) {
+                alert(`${color === OTHER ? '❌' : '⭕️'} is winner!`);
+            }
+            // color = 3 - color;
+            setTimeout(() => {
+                computerMove(board, 3 - color)
+            });
+            // console.log(bestChoice(board, color));
+            // if (willWin(board, color) !== null) {
+            //     console.log(`${color === OTHER ? '❌' : '⭕️'} will win~`);
+            // }
+        }
+
+        function computerMove(board, color) {
+            const { point, result } = bestChoice(board, color);
+            console.log(bestChoice(board, color), '----');
+            if (point !== null) {
+                board[point] = color;
+            }
+            if (check(board, color)) {
+                alert(`${color === OTHER ? '❌' : '⭕️'} is winner!`);
+            }
+            draw(board);
+        }
+
+        function check(board, color) {
+            // 横向
+            for (let i = 0; i < 3; i++) {
+                let win = true;
+                for (let j = 0; j < 3; j++) {
+                    if (board[3 * i + j] !== color) {
+                        win = false;
+                    }
+                }
+                if (win) { return true; }
+            }
+            // 纵向  
+            for (let i = 0; i < 3; i++) {
+                let win = true;
+                for (let j = 0; j < 3; j++) {
+                    if (board[i + 3 * j] !== color) {
+                        win = false;
+                    }
+                }
+                if (win) { return true; }
+            }     
+            // 倒斜角 
+            {
+                let win = true;
+                for (let i = 0; i < 3; i++) {
+                    if (board[2 * 2 * i] !== color) {
+                        win = false;
+                    }
+                } 
+                if (win) { return true; }
+            }  
+            // 正斜角  
+            {
+                let win = true;
+                for (let i = 0; i < 3; i++) {
+                    if (board[2 * (i + 1)] !== color) {
+                        win = false;
+                    }
+                } 
+                if (win) { return true; }
+            }  
+            
+        }
+
+        function clone(board) {
+            return Object.create(board);
+        }
+
+        function willWin(board, color) {
+            for (let i = 0; i < board.length; i++) {
+                if (!board[i]) {
+                    let tmp = clone(board);
+                    tmp[i] = color;
+                    if (check(tmp, color)) {
+                        return i;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function bestChoice(board, color) {
+            let p = willWin(board, color);
+            if (p !== null) {
+                return {
+                    point: p,
+                    result: 1,
+                }
+            }
+            let result = -2;
+            let point = null;
+
+            for (let i = 0; i < board.length; i++) {
+                if (board[i]) continue;
+                let tmp = clone(board);
+                tmp[i] = color;
+                const r = bestChoice(tmp, 3 - color).result;
+
+                if (-r >= result) {
+                    result = -r;
+                    point = i;
+                }
+                if (result === 1) {
+                    break;
+                }
+            }
+            return {
+                point,
+                result: point !== null ? result : 0,
+            }
+        }
+    </script>  
+</body>
+</html>
